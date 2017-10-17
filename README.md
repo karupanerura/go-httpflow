@@ -45,15 +45,8 @@ func NewUsersGetInstancesRequester(id int) *UsersGetInstancesRequester {
 }
 
 func (r *UsersGetInstancesRequester) ParseBody() (*User, error) {
-	if !r.IsJSON() {
-		return nil, fmt.Errorf("Response is not json: %s", string(r.GetBody()))
-	}
-
-	decoder := r.GetDecoder()
-	decoder.UseNumber()
-
 	var body User
-	err := decoder.Decode(&body)
+	err := r.DecodeJSON(&body)
 	if err != nil {
 		return nil, err
 	}
