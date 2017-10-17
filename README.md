@@ -1,4 +1,4 @@
-# gotcha
+# httpflow
 
 Simple web api client builder for go programming language.
 
@@ -16,7 +16,7 @@ import (
 	"strconv"
 
 	"github.com/k0kubun/pp"
-	"github.com/karupanerura/gotcha"
+	"github.com/karupanerura/httpflow"
 )
 
 type User struct {
@@ -25,8 +25,8 @@ type User struct {
 }
 
 type UsersGetInstancesSession struct {
-	gotcha.NobodyRequestBuilder
-	gotcha.JsonResponseHandler
+	httpflow.NobodyRequestBuilder
+	httpflow.JsonResponseHandler
 }
 
 func NewUsersGetInstancesSession(id int) *UsersGetInstancesSession {
@@ -36,11 +36,11 @@ func NewUsersGetInstancesSession(id int) *UsersGetInstancesSession {
 	}
 
 	return &UsersGetInstancesSession{
-		NobodyRequestBuilder: gotcha.NobodyRequestBuilder{
+		NobodyRequestBuilder: httpflow.NobodyRequestBuilder{
 			RequestMethod: http.MethodGet,
 			RequestURL:    netURL,
 		},
-		JsonResponseHandler: gotcha.JsonResponseHandler{},
+		JsonResponseHandler: httpflow.JsonResponseHandler{},
 	}
 }
 
@@ -55,7 +55,7 @@ func (r *UsersGetInstancesSession) ParseBody() (*User, error) {
 }
 
 func main() {
-	agent := gotcha.NewAgent(http.DefaultClient)
+	agent := httpflow.NewAgent(http.DefaultClient)
 	session := NewUsersGetInstancesSession(1)
 	err := agent.RunSession(session)
 	if err != nil {
