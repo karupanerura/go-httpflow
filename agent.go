@@ -5,17 +5,17 @@ import (
 	"net/http"
 )
 
-var DefaultAgent = &Agent{client: http.DefaultClient}
+var DefaultAgent = &Agent{Client: http.DefaultClient}
 
 type Agent struct {
-	client httpClient
+	Client HTTPClient
 }
 
 func NewAgent(client *http.Client) *Agent {
-	return &Agent{client: client}
+	return &Agent{Client: client}
 }
 
-type httpClient interface {
+type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
@@ -35,7 +35,7 @@ func (a *Agent) DoCtx(ctx context.Context, r Requester) error {
 	}
 
 	req = req.WithContext(ctx)
-	res, err := a.client.Do(req)
+	res, err := a.Client.Do(req)
 	if err != nil {
 		return err
 	}

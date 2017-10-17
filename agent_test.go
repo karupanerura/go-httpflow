@@ -71,14 +71,14 @@ func (m *mockRequester) HandleResponse(res *http.Response) error {
 func TestNewAgent(t *testing.T) {
 	client := &http.Client{}
 	agent := NewAgent(client)
-	if agent.client != client {
-		t.Errorf("Should got same pointer, but got: %+v", agent.client)
+	if agent.Client != client {
+		t.Errorf("Should got same pointer, but got: %+v", agent.Client)
 	}
 }
 
 func TestAgentDo(t *testing.T) {
 	t.Run("No Error", func(t *testing.T) {
-		agent := Agent{client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
+		agent := Agent{Client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
 		req, err := http.NewRequest(http.MethodGet, "http://example.com/", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -117,7 +117,7 @@ func TestAgentDo(t *testing.T) {
 	})
 
 	t.Run("Request Building Error", func(t *testing.T) {
-		agent := Agent{client: mockClient{}}
+		agent := Agent{Client: mockClient{}}
 
 		const msg = "MOCK REQUEST BUILDING ERROR DAYO"
 		requester := &mockRequester{reqerr: errors.New(msg)}
@@ -139,7 +139,7 @@ func TestAgentDo(t *testing.T) {
 
 	t.Run("Request Error", func(t *testing.T) {
 		const msg = "MOCK REQUEST ERROR DAYO"
-		agent := Agent{client: mockClient{mockError: errors.New(msg)}}
+		agent := Agent{Client: mockClient{mockError: errors.New(msg)}}
 
 		req, err := http.NewRequest(http.MethodGet, "http://example.com/", nil)
 		if err != nil {
@@ -164,7 +164,7 @@ func TestAgentDo(t *testing.T) {
 	})
 
 	t.Run("Response Handling Error", func(t *testing.T) {
-		agent := Agent{client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
+		agent := Agent{Client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
 		req, err := http.NewRequest(http.MethodGet, "http://example.com/", nil)
 		if err != nil {
 			t.Fatal(err)
