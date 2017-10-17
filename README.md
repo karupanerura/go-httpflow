@@ -16,7 +16,7 @@ import (
 	"strconv"
 
 	"github.com/k0kubun/pp"
-	"github.com/karupanerura/httpflow"
+	httpflow "github.com/karupanerura/go-httpflow"
 )
 
 type User struct {
