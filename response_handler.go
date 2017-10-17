@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"mime"
 	"net/http"
 	"strings"
 )
+
+const contentTypeHeaderName = "Content-Type"
 
 type ResponseHandler interface {
 	HandleResponse(*http.Response) error
@@ -49,11 +50,9 @@ type JsonResponseHandler struct {
 var _ ResponseHandler = &JsonResponseHandler{}
 
 func (h *JsonResponseHandler) IsJSON() bool {
-	contentType := h.Header.Get("Content-Type")
-	mediatype, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return false
-	}
+	contentType := h.Header.Get(contentTypeHeaderName)
+	parts := strings.SplitN(contentType, ";", 2)
+	mediatype := parts[0]
 	return mediatype == "application/json" ||
 		strings.HasPrefix(mediatype, "application/json+") ||
 		mediatype == "application/problem+json" // RFC7807
@@ -63,4 +62,14 @@ func (h *JsonResponseHandler) GetDecoder() *json.Decoder {
 	body := h.GetBody()
 	reader := bytes.NewReader(body)
 	return json.NewDecoder(reader)
+}
+
+func (h *JsonResponseHandler) DecodeJSON(v interface{}) error {
+	if !h.IsJSON() {
+		return &UnexpectedContentTypeError{
+			ContentType: h.Header.Get(contentTypeHeaderName),
+			Body:        h.GetBody(),
+		}
+	}
+	return h.GetDecoder().Decode(v)
 }

@@ -63,6 +63,9 @@ func TestStringResponseHandler(t *testing.T) {
 }
 
 func TestJsonResponseHandler(t *testing.T) {
+	type Body struct {
+		Foo string
+	}
 	t.Run("GetDecoder()", func(t *testing.T) {
 		res := &http.Response{
 			Body: ioutil.NopCloser(strings.NewReader(`{"foo":"bar"}`)),
@@ -73,9 +76,7 @@ func TestJsonResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		var body struct {
-			Foo string
-		}
+		var body Body
 		err = handler.GetDecoder().Decode(&body)
 		if err != nil {
 			t.Fatal(err)
@@ -83,6 +84,54 @@ func TestJsonResponseHandler(t *testing.T) {
 		if body.Foo != "bar" {
 			t.Errorf("Should get bar, but got: %s", body.Foo)
 		}
+	})
+
+	t.Run("DecodeJSON()", func(t *testing.T) {
+		t.Run("Content-Type:application/json", func(t *testing.T) {
+			res := &http.Response{
+				Header: http.Header{"Content-Type": {"application/json"}},
+				Body:   ioutil.NopCloser(strings.NewReader(`{"foo":"bar"}`)),
+			}
+			handler := &JsonResponseHandler{}
+			err := handler.HandleResponse(res)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var body Body
+			err = handler.DecodeJSON(&body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if body.Foo != "bar" {
+				t.Errorf("Should get bar, but got: %s", body.Foo)
+			}
+		})
+
+		t.Run("Content-Type:text/plain", func(t *testing.T) {
+			res := &http.Response{
+				Header: http.Header{"Content-Type": {"text/plain"}},
+				Body:   ioutil.NopCloser(bytes.NewReader([]byte{123, 45, 67, 89})),
+			}
+			handler := &JsonResponseHandler{}
+			err := handler.HandleResponse(res)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var body Body
+			err = handler.DecodeJSON(&body)
+			if err == nil {
+				t.Fatal("Should not be nil")
+			}
+			if subErr, ok := err.(*UnexpectedContentTypeError); !ok {
+				t.Error(err)
+			} else if subErr.ContentType != "text/plain" {
+				t.Errorf("Should get text/plain, but got: %s", subErr.ContentType)
+			} else if diff := cmp.Diff(subErr.Body, []byte{123, 45, 67, 89}); diff != "" {
+				t.Errorf("Should no diff, but got: %s", diff)
+			}
+		})
 	})
 
 	t.Run("IsJSON()", func(t *testing.T) {
