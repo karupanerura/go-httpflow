@@ -57,7 +57,7 @@ func (r *UsersGetInstancesSession) ParseBody() (*User, error) {
 func main() {
 	agent := gotcha.NewAgent(http.DefaultClient)
 	session := NewUsersGetInstancesSession(1)
-	err := agent.Do(session)
+	err := agent.RunSession(session)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -24,11 +24,11 @@ type Session interface {
 	ResponseHandler
 }
 
-func (a *Agent) Do(r Session) error {
-	return a.DoCtx(context.Background(), r)
+func (a *Agent) RunSession(r Session) error {
+	return a.RunSessionCtx(context.Background(), r)
 }
 
-func (a *Agent) DoCtx(ctx context.Context, r Session) error {
+func (a *Agent) RunSessionCtx(ctx context.Context, r Session) error {
 	req, err := r.BuildRequest()
 	if err != nil {
 		return err

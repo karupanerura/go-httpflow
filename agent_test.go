@@ -85,7 +85,7 @@ func TestAgentDo(t *testing.T) {
 		}
 
 		session := &mockSession{request: req}
-		err = agent.Do(session)
+		err = agent.RunSession(session)
 		if err != nil {
 			t.Error(err)
 		}
@@ -121,7 +121,7 @@ func TestAgentDo(t *testing.T) {
 
 		const msg = "MOCK REQUEST BUILDING ERROR DAYO"
 		session := &mockSession{reqerr: errors.New(msg)}
-		err := agent.Do(session)
+		err := agent.RunSession(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -147,7 +147,7 @@ func TestAgentDo(t *testing.T) {
 		}
 
 		session := &mockSession{request: req}
-		err = agent.Do(session)
+		err = agent.RunSession(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -172,7 +172,7 @@ func TestAgentDo(t *testing.T) {
 
 		const msg = "MOCK RESPONSE ERROR DAYO"
 		session := &mockSession{request: req, reserr: errors.New(msg)}
-		err = agent.Do(session)
+		err = agent.RunSession(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
