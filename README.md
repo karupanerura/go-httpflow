@@ -1,6 +1,6 @@
 # httpflow
 
-Simple web api client builder for go programming language.
+Simple web api client framework for go programming language.
 
 Example:
 
