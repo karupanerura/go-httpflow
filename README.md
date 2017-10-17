@@ -24,18 +24,18 @@ type User struct {
 	Name string      `json:"name"`
 }
 
-type UsersGetInstancesRequester struct {
+type UsersGetInstancesSession struct {
 	gotcha.NobodyRequestBuilder
 	gotcha.JsonResponseHandler
 }
 
-func NewUsersGetInstancesRequester(id int) *UsersGetInstancesRequester {
+func NewUsersGetInstancesSession(id int) *UsersGetInstancesSession {
 	netURL, err := url.Parse("https://jsonplaceholder.typicode.com/users/" + strconv.Itoa(id))
 	if err != nil {
 		panic(err)
 	}
 
-	return &UsersGetInstancesRequester{
+	return &UsersGetInstancesSession{
 		NobodyRequestBuilder: gotcha.NobodyRequestBuilder{
 			RequestMethod: http.MethodGet,
 			RequestURL:    netURL,
@@ -44,7 +44,7 @@ func NewUsersGetInstancesRequester(id int) *UsersGetInstancesRequester {
 	}
 }
 
-func (r *UsersGetInstancesRequester) ParseBody() (*User, error) {
+func (r *UsersGetInstancesSession) ParseBody() (*User, error) {
 	var body User
 	err := r.DecodeJSON(&body)
 	if err != nil {
@@ -56,13 +56,13 @@ func (r *UsersGetInstancesRequester) ParseBody() (*User, error) {
 
 func main() {
 	agent := gotcha.NewAgent(http.DefaultClient)
-	requester := NewUsersGetInstancesRequester(1)
-	err := agent.Do(requester)
+	session := NewUsersGetInstancesSession(1)
+	err := agent.Do(session)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	res, err := requester.ParseBody()
+	res, err := session.ParseBody()
 	if err != nil {
 		log.Fatal(err)
 	}

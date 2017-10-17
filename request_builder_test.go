@@ -16,7 +16,7 @@ func mustParseURL(s string) *url.URL {
 	return url
 }
 
-func TestRawRequester(t *testing.T) {
+func TestRawRequestBuilder(t *testing.T) {
 	url := mustParseURL("http://localhost/")
 	t.Run("GET", func(t *testing.T) {
 		r := &RawRequestBuilder{
@@ -80,7 +80,7 @@ func TestRawRequester(t *testing.T) {
 	})
 }
 
-func TestNobodyRequester(t *testing.T) {
+func TestNobodyRequestBuilder(t *testing.T) {
 	url := mustParseURL("http://localhost/")
 	r := &NobodyRequestBuilder{
 		RequestMethod: http.MethodGet,
@@ -99,7 +99,7 @@ func TestNobodyRequester(t *testing.T) {
 	}
 }
 
-func TestJsonRequester(t *testing.T) {
+func TestJsonRequestBuilder(t *testing.T) {
 	url := mustParseURL("http://localhost/")
 	t.Run("GET", func(t *testing.T) {
 		r := &JsonRequestBuilder{

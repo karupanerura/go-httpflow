@@ -48,7 +48,7 @@ func (r mockResponse) MockResponse(req *http.Request) *http.Response {
 	}
 }
 
-type mockRequester struct {
+type mockSession struct {
 	request   *http.Request
 	reqerr    error
 	buildreq  int
@@ -57,12 +57,12 @@ type mockRequester struct {
 	handleres int
 }
 
-func (m *mockRequester) BuildRequest() (*http.Request, error) {
+func (m *mockSession) BuildRequest() (*http.Request, error) {
 	m.buildreq++
 	return m.request, m.reqerr
 }
 
-func (m *mockRequester) HandleResponse(res *http.Response) error {
+func (m *mockSession) HandleResponse(res *http.Response) error {
 	m.response = res
 	m.handleres++
 	return m.reserr
@@ -84,23 +84,23 @@ func TestAgentDo(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		requester := &mockRequester{request: req}
-		err = agent.Do(requester)
+		session := &mockSession{request: req}
+		err = agent.Do(session)
 		if err != nil {
 			t.Error(err)
 		}
-		if requester.reserr != nil {
+		if session.reserr != nil {
 			t.Error(err)
 		}
 
-		if requester.buildreq != 1 {
-			t.Errorf("Should called once, but called %d times", requester.buildreq)
+		if session.buildreq != 1 {
+			t.Errorf("Should called once, but called %d times", session.buildreq)
 		}
-		if requester.handleres != 1 {
-			t.Errorf("Should called once, but called %d times", requester.handleres)
+		if session.handleres != 1 {
+			t.Errorf("Should called once, but called %d times", session.handleres)
 		}
 
-		res := requester.response
+		res := session.response
 		if res == nil {
 			t.Fatal("Response should not be nil")
 		}
@@ -120,8 +120,8 @@ func TestAgentDo(t *testing.T) {
 		agent := Agent{Client: mockClient{}}
 
 		const msg = "MOCK REQUEST BUILDING ERROR DAYO"
-		requester := &mockRequester{reqerr: errors.New(msg)}
-		err := agent.Do(requester)
+		session := &mockSession{reqerr: errors.New(msg)}
+		err := agent.Do(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -129,11 +129,11 @@ func TestAgentDo(t *testing.T) {
 			t.Error(err)
 		}
 
-		if requester.buildreq != 1 {
-			t.Errorf("Should called once, but called %d times", requester.buildreq)
+		if session.buildreq != 1 {
+			t.Errorf("Should called once, but called %d times", session.buildreq)
 		}
-		if requester.handleres != 0 {
-			t.Errorf("Should not called, but called %d times", requester.handleres)
+		if session.handleres != 0 {
+			t.Errorf("Should not called, but called %d times", session.handleres)
 		}
 	})
 
@@ -146,8 +146,8 @@ func TestAgentDo(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		requester := &mockRequester{request: req}
-		err = agent.Do(requester)
+		session := &mockSession{request: req}
+		err = agent.Do(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -155,11 +155,11 @@ func TestAgentDo(t *testing.T) {
 			t.Error(err)
 		}
 
-		if requester.buildreq != 1 {
-			t.Errorf("Should called once, but called %d times", requester.buildreq)
+		if session.buildreq != 1 {
+			t.Errorf("Should called once, but called %d times", session.buildreq)
 		}
-		if requester.handleres != 0 {
-			t.Errorf("Should not called, but called %d times", requester.handleres)
+		if session.handleres != 0 {
+			t.Errorf("Should not called, but called %d times", session.handleres)
 		}
 	})
 
@@ -171,8 +171,8 @@ func TestAgentDo(t *testing.T) {
 		}
 
 		const msg = "MOCK RESPONSE ERROR DAYO"
-		requester := &mockRequester{request: req, reserr: errors.New(msg)}
-		err = agent.Do(requester)
+		session := &mockSession{request: req, reserr: errors.New(msg)}
+		err = agent.Do(session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -180,11 +180,11 @@ func TestAgentDo(t *testing.T) {
 			t.Error(err)
 		}
 
-		if requester.buildreq != 1 {
-			t.Errorf("Should called once, but called %d times", requester.buildreq)
+		if session.buildreq != 1 {
+			t.Errorf("Should called once, but called %d times", session.buildreq)
 		}
-		if requester.handleres != 1 {
-			t.Errorf("Should called once, but called %d times", requester.handleres)
+		if session.handleres != 1 {
+			t.Errorf("Should called once, but called %d times", session.handleres)
 		}
 	})
 }

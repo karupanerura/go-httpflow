@@ -19,16 +19,16 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-type Requester interface {
+type Session interface {
 	RequestBuilder
 	ResponseHandler
 }
 
-func (a *Agent) Do(r Requester) error {
+func (a *Agent) Do(r Session) error {
 	return a.DoCtx(context.Background(), r)
 }
 
-func (a *Agent) DoCtx(ctx context.Context, r Requester) error {
+func (a *Agent) DoCtx(ctx context.Context, r Session) error {
 	req, err := r.BuildRequest()
 	if err != nil {
 		return err
