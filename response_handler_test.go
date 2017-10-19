@@ -381,3 +381,56 @@ func TestJSONResponseHandler(t *testing.T) {
 		})
 	})
 }
+
+func TestFormResponseHandler(t *testing.T) {
+	t.Run("application/x-www-form-urlencoded", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"application/x-www-form-urlencoded"}},
+			Body:   ioutil.NopCloser(strings.NewReader("foo=bar")),
+		}
+		handler := &FormResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		form, err := handler.ParseForm()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(form) != 1 {
+			t.Errorf("Should be 1 key, but got: %d", len(form))
+		}
+		if foo := form.Get("foo"); foo != "bar" {
+			t.Errorf("Should get bar, but got: %s", foo)
+		}
+	})
+
+	t.Run("UnexpectedContentType", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"text/plain"}},
+			Body:   ioutil.NopCloser(bytes.NewReader([]byte{123, 45, 67, 89})),
+		}
+		handler := &FormResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		form, err := handler.ParseForm()
+		if err == nil {
+			t.Fatal("Should not be nil")
+		}
+		if form != nil {
+			t.Errorf("Should be nil, but got: %+v", form)
+		}
+
+		if subErr, ok := err.(*UnexpectedContentTypeError); !ok {
+			t.Error(err)
+		} else if subErr.ContentType != "text/plain" {
+			t.Errorf("Should get text/plain, but got: %s", subErr.ContentType)
+		} else if diff := cmp.Diff(subErr.Body, []byte{123, 45, 67, 89}); diff != "" {
+			t.Errorf("Should no diff, but got: %s", diff)
+		}
+	})
+}

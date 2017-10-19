@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"golang.org/x/text/encoding"
@@ -149,4 +150,29 @@ func (h *JSONResponseHandler) DecodeJSON(v interface{}) error {
 		}
 	}
 	return h.GetDecoder().Decode(v)
+}
+
+type FormResponseHandler struct {
+	StringResponseHandler
+}
+
+func (h *FormResponseHandler) IsForm() bool {
+	contentType := strings.TrimSpace(h.Header.Get(contentTypeHeaderName))
+	parts := strings.SplitN(contentType, ";", 2)
+	mediatype := parts[0]
+	return mediatype == "application/x-www-form-urlencoded"
+}
+
+func (h *FormResponseHandler) ParseForm() (url.Values, error) {
+	if !h.IsForm() {
+		return nil, &UnexpectedContentTypeError{
+			ContentType: h.Header.Get(contentTypeHeaderName),
+			Body:        h.BinaryResponseHandler.GetBody(),
+		}
+	}
+
+	// Don't follow enconding
+	// SEE ALSO: https://www.w3.org/TR/html5/forms.html#application/x-www-form-urlencoded-encoding-algorithm
+	body := h.GetBody()
+	return url.ParseQuery(body)
 }
