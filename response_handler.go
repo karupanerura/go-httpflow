@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"strings"
+
+	"golang.org/x/text/encoding/ianaindex"
 )
 
 const contentTypeHeaderName = "Content-Type"
@@ -14,17 +17,46 @@ type ResponseHandler interface {
 	HandleResponse(*http.Response) error
 }
 
+type RawResponseHandler struct {
+	RawResponse *http.Response
+}
+
+var _ ResponseHandler = &RawResponseHandler{}
+
+func (h *RawResponseHandler) HandleResponse(res *http.Response) error {
+	h.RawResponse = res
+	return nil
+}
+
+type NobodyResponseHandler struct {
+	RawResponseHandler
+	StatusCode int
+	Header     http.Header
+}
+
+var _ ResponseHandler = &NobodyResponseHandler{}
+
+func (h *NobodyResponseHandler) HandleResponse(res *http.Response) error {
+	h.StatusCode = res.StatusCode
+	h.Header = res.Header
+	return h.RawResponseHandler.HandleResponse(res)
+}
+
 type BinaryResponseHandler struct {
-	body   []byte
-	Header http.Header
+	NobodyResponseHandler
+	body []byte
 }
 
 var _ ResponseHandler = &BinaryResponseHandler{}
 
 func (h *BinaryResponseHandler) HandleResponse(res *http.Response) (err error) {
 	defer res.Body.Close()
-	h.Header = res.Header
 	h.body, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+
+	err = h.NobodyResponseHandler.HandleResponse(res)
 	return
 }
 
@@ -38,9 +70,26 @@ type StringResponseHandler struct {
 
 var _ ResponseHandler = &StringResponseHandler{}
 
-func (h *StringResponseHandler) GetBody() string {
+func (h *StringResponseHandler) GetBody() (string, error) {
 	body := h.BinaryResponseHandler.GetBody()
-	return string(body)
+	_, params, err := mime.ParseMediaType(h.Header.Get(contentTypeHeaderName))
+	if err != nil {
+		return "", err
+	}
+
+	if charset, ok := params["charset"]; ok {
+		encoding, err := ianaindex.MIME.Encoding(charset)
+		if err != nil {
+			return "", err
+		}
+
+		body, err = encoding.NewDecoder().Bytes(body)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return string(body), nil
 }
 
 type JsonResponseHandler struct {
@@ -50,12 +99,10 @@ type JsonResponseHandler struct {
 var _ ResponseHandler = &JsonResponseHandler{}
 
 func (h *JsonResponseHandler) IsJSON() bool {
-	contentType := h.Header.Get(contentTypeHeaderName)
+	contentType := strings.TrimSpace(h.Header.Get(contentTypeHeaderName))
 	parts := strings.SplitN(contentType, ";", 2)
 	mediatype := parts[0]
-	return mediatype == "application/json" ||
-		strings.HasPrefix(mediatype, "application/json+") ||
-		mediatype == "application/problem+json" // RFC7807
+	return mediatype == "application/json" || strings.HasPrefix(mediatype, "application/json+") || (strings.HasPrefix(mediatype, "application/") && strings.HasSuffix(mediatype, "+json"))
 }
 
 func (h *JsonResponseHandler) GetDecoder() *json.Decoder {

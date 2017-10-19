@@ -9,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/encoding/unicode"
 )
 
 type mockErrReader struct {
@@ -17,6 +20,37 @@ type mockErrReader struct {
 
 func (m *mockErrReader) Read(_ []byte) (int, error) {
 	return 0, m.err
+}
+
+func TestRawResponseHandler(t *testing.T) {
+	res := &http.Response{}
+	handler := &RawResponseHandler{}
+	err := handler.HandleResponse(res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if handler.RawResponse != res {
+		t.Errorf("Should be same pointer, but got: %d", handler.RawResponse)
+	}
+}
+
+func TestNobodyResponseHandler(t *testing.T) {
+	header := http.Header{}
+	header.Set("X-Waiwai", "wai-wai-")
+	res := &http.Response{StatusCode: 200, Header: header}
+	handler := &NobodyResponseHandler{}
+	err := handler.HandleResponse(res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if handler.StatusCode != 200 {
+		t.Errorf("Should be 200, but got: %d", res.StatusCode)
+	}
+	if diff := cmp.Diff(handler.Header, header); diff != "" {
+		t.Errorf("Should no diff, but got: %s", diff)
+	}
 }
 
 func TestBinaryResponseHandler(t *testing.T) {
@@ -48,18 +82,115 @@ func TestBinaryResponseHandler(t *testing.T) {
 	})
 }
 
-func TestStringResponseHandler(t *testing.T) {
-	res := &http.Response{Body: ioutil.NopCloser(strings.NewReader("foo"))}
-	handler := &StringResponseHandler{}
-	err := handler.HandleResponse(res)
+func mustEncodeString(e encoding.Encoding, src string) string {
+	encoder := e.NewEncoder()
+	dst, err := encoder.String(src)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
+	return dst
+}
 
-	body := handler.GetBody()
-	if body != "foo" {
-		t.Errorf("Should get foo, but got: %s", body)
-	}
+func TestStringResponseHandler(t *testing.T) {
+	t.Run("text/plain", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"text/plain"}},
+			Body:   ioutil.NopCloser(strings.NewReader("foo")),
+		}
+		handler := &StringResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, err := handler.GetBody()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if body != "foo" {
+			t.Errorf("Should get foo, but got: %s", body)
+		}
+	})
+
+	t.Run("text/plain; charset=utf-8", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"text/plain; charset=utf-8"}},
+			Body:   ioutil.NopCloser(strings.NewReader(mustEncodeString(unicode.UTF8, "わかめ"))),
+		}
+		handler := &StringResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, err := handler.GetBody()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if body != "わかめ" {
+			t.Errorf("Should get わかめ, but got: %s", body)
+		}
+	})
+
+	t.Run("text/plain; charset=Shift_JIS", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"text/plain; charset=Shift_JIS"}},
+			Body:   ioutil.NopCloser(strings.NewReader(mustEncodeString(japanese.ShiftJIS, "かつを"))),
+		}
+		handler := &StringResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, err := handler.GetBody()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if body != "かつを" {
+			t.Errorf("Should get かつを, but got: %s", body)
+		}
+	})
+
+	t.Run("text/plain; charset=invalid-charset", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"text/plain; charset=invalid-charset"}},
+			Body:   ioutil.NopCloser(strings.NewReader("naiyo")),
+		}
+		handler := &StringResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, err := handler.GetBody()
+		if err == nil {
+			t.Fatal("Should not be nil")
+		}
+		if body != "" {
+			t.Errorf("Should get empty string, but got: %s", body)
+		}
+	})
+
+	t.Run("invalid-content-type", func(t *testing.T) {
+		res := &http.Response{
+			Header: http.Header{"Content-Type": {"invalid-content-type^$#%#@$!@@#&*"}},
+			Body:   ioutil.NopCloser(strings.NewReader("naiyo")),
+		}
+		handler := &StringResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		body, err := handler.GetBody()
+		if err == nil {
+			t.Fatal("Should not be nil")
+		}
+		if body != "" {
+			t.Errorf("Should get empty string, but got: %s", body)
+		}
+	})
 }
 
 func TestJsonResponseHandler(t *testing.T) {

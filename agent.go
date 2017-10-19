@@ -24,12 +24,12 @@ type Session interface {
 	ResponseHandler
 }
 
-func (a *Agent) RunSession(r Session) error {
-	return a.RunSessionCtx(context.Background(), r)
+func (a *Agent) RunSession(session Session) error {
+	return a.RunSessionCtx(context.Background(), session)
 }
 
-func (a *Agent) RunSessionCtx(ctx context.Context, r Session) error {
-	req, err := r.BuildRequest()
+func (a *Agent) RunSessionCtx(ctx context.Context, session Session) error {
+	req, err := session.BuildRequest()
 	if err != nil {
 		return err
 	}
@@ -40,5 +40,5 @@ func (a *Agent) RunSessionCtx(ctx context.Context, r Session) error {
 		return err
 	}
 
-	return r.HandleResponse(res)
+	return session.HandleResponse(res)
 }
