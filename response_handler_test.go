@@ -193,7 +193,7 @@ func TestStringResponseHandler(t *testing.T) {
 	})
 }
 
-func TestJsonResponseHandler(t *testing.T) {
+func TestJSONResponseHandler(t *testing.T) {
 	type Body struct {
 		Foo string
 	}
@@ -201,7 +201,7 @@ func TestJsonResponseHandler(t *testing.T) {
 		res := &http.Response{
 			Body: ioutil.NopCloser(strings.NewReader(`{"foo":"bar"}`)),
 		}
-		handler := &JsonResponseHandler{}
+		handler := &JSONResponseHandler{}
 		err := handler.HandleResponse(res)
 		if err != nil {
 			t.Fatal(err)
@@ -223,7 +223,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"application/json"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`{"foo":"bar"}`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -244,7 +244,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"text/plain"}},
 				Body:   ioutil.NopCloser(bytes.NewReader([]byte{123, 45, 67, 89})),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -271,7 +271,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"application/json"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`{"dummy":"dummy"}`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -287,7 +287,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"application/json; charset=utf-8"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`{"dummy":"dummy"}`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -303,7 +303,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"application/json+hal"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`{"dummy":"dummy"}`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -319,7 +319,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"application/problem+json"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`{"dummy":"dummy"}`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)
@@ -335,7 +335,7 @@ func TestJsonResponseHandler(t *testing.T) {
 				Header: http.Header{"Content-Type": {"text/html"}},
 				Body:   ioutil.NopCloser(strings.NewReader(`<html><head><title>dummy</title></head><body>dummy</body></html>`)),
 			}
-			handler := &JsonResponseHandler{}
+			handler := &JSONResponseHandler{}
 			err := handler.HandleResponse(res)
 			if err != nil {
 				t.Fatal(err)

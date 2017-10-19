@@ -30,7 +30,7 @@ type User struct {
 
 type UsersGetInstancesSession struct {
 	httpflow.NobodyRequestBuilder
-	httpflow.JsonResponseHandler
+	httpflow.JSONResponseHandler
 }
 
 func NewUsersGetInstancesSession(id int) *UsersGetInstancesSession {
@@ -44,7 +44,7 @@ func NewUsersGetInstancesSession(id int) *UsersGetInstancesSession {
 			RequestMethod: http.MethodGet,
 			RequestURL:    netURL,
 		},
-		JsonResponseHandler: httpflow.JsonResponseHandler{},
+		JSONResponseHandler: httpflow.JSONResponseHandler{},
 	}
 }
 

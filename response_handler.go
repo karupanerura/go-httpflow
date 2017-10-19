@@ -30,14 +30,14 @@ func (h *RawResponseHandler) HandleResponse(res *http.Response) error {
 
 type NobodyResponseHandler struct {
 	RawResponseHandler
-	StatusCode int
-	Header     http.Header
+	StatusCode
+	Header http.Header
 }
 
 var _ ResponseHandler = &NobodyResponseHandler{}
 
 func (h *NobodyResponseHandler) HandleResponse(res *http.Response) error {
-	h.StatusCode = res.StatusCode
+	h.StatusCode = StatusCode(res.StatusCode)
 	h.Header = res.Header
 	return h.RawResponseHandler.HandleResponse(res)
 }
@@ -92,26 +92,26 @@ func (h *StringResponseHandler) GetBody() (string, error) {
 	return string(body), nil
 }
 
-type JsonResponseHandler struct {
+type JSONResponseHandler struct {
 	BinaryResponseHandler
 }
 
-var _ ResponseHandler = &JsonResponseHandler{}
+var _ ResponseHandler = &JSONResponseHandler{}
 
-func (h *JsonResponseHandler) IsJSON() bool {
+func (h *JSONResponseHandler) IsJSON() bool {
 	contentType := strings.TrimSpace(h.Header.Get(contentTypeHeaderName))
 	parts := strings.SplitN(contentType, ";", 2)
 	mediatype := parts[0]
 	return mediatype == "application/json" || strings.HasPrefix(mediatype, "application/json+") || (strings.HasPrefix(mediatype, "application/") && strings.HasSuffix(mediatype, "+json"))
 }
 
-func (h *JsonResponseHandler) GetDecoder() *json.Decoder {
+func (h *JSONResponseHandler) GetDecoder() *json.Decoder {
 	body := h.GetBody()
 	reader := bytes.NewReader(body)
 	return json.NewDecoder(reader)
 }
 
-func (h *JsonResponseHandler) DecodeJSON(v interface{}) error {
+func (h *JSONResponseHandler) DecodeJSON(v interface{}) error {
 	if !h.IsJSON() {
 		return &UnexpectedContentTypeError{
 			ContentType: h.Header.Get(contentTypeHeaderName),
