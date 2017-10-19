@@ -99,10 +99,10 @@ func TestNobodyRequestBuilder(t *testing.T) {
 	}
 }
 
-func TestJsonRequestBuilder(t *testing.T) {
+func TestJSONRequestBuilder(t *testing.T) {
 	url := mustParseURL("http://localhost/")
 	t.Run("GET", func(t *testing.T) {
-		r := &JsonRequestBuilder{
+		r := &JSONRequestBuilder{
 			RequestMethod: http.MethodGet,
 			RequestURL:    url,
 		}
@@ -122,9 +122,60 @@ func TestJsonRequestBuilder(t *testing.T) {
 	t.Run("POST", func(t *testing.T) {
 		header := http.Header{}
 		header.Set("Content-Type", "application/json")
-		r := &JsonRequestBuilder{
+		r := &JSONRequestBuilder{
 			RequestMethod: http.MethodPost,
 			RequestHeader: header,
+			RequestURL:    url,
+			RequestBody:   map[string]string{"foo": "bar"},
+		}
+
+		req, err := r.BuildRequest()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if req.Method != http.MethodPost {
+			t.Errorf("Should got POST method, but got: %s", req.Method)
+		}
+		if s := req.URL.String(); s != url.String() {
+			t.Errorf("Should be %s, but got: %s", url, s)
+		}
+		if s := req.Header.Get("Content-Type"); s != "application/json" {
+			t.Errorf("Should be application/json, but got: %s", s)
+		}
+		if body, err := ioutil.ReadAll(req.Body); string(body) != `{"foo":"bar"}` || err != nil {
+			t.Errorf("Should be {\"foo\":\"bar\"}, but got: %s, error: %v", string(body), err)
+		}
+	})
+
+	t.Run("POST without header", func(t *testing.T) {
+		r := &JSONRequestBuilder{
+			RequestMethod: http.MethodPost,
+			RequestURL:    url,
+			RequestBody:   map[string]string{"foo": "bar"},
+		}
+
+		req, err := r.BuildRequest()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if req.Method != http.MethodPost {
+			t.Errorf("Should got POST method, but got: %s", req.Method)
+		}
+		if s := req.URL.String(); s != url.String() {
+			t.Errorf("Should be %s, but got: %s", url, s)
+		}
+		if s := req.Header.Get("Content-Type"); s != "application/json" {
+			t.Errorf("Should be application/json, but got: %s", s)
+		}
+		if body, err := ioutil.ReadAll(req.Body); string(body) != `{"foo":"bar"}` || err != nil {
+			t.Errorf("Should be {\"foo\":\"bar\"}, but got: %s, error: %v", string(body), err)
+		}
+	})
+
+	t.Run("POST with empty header", func(t *testing.T) {
+		r := &JSONRequestBuilder{
+			RequestMethod: http.MethodPost,
+			RequestHeader: http.Header{},
 			RequestURL:    url,
 			RequestBody:   map[string]string{"foo": "bar"},
 		}
@@ -150,7 +201,7 @@ func TestJsonRequestBuilder(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		header := http.Header{}
 		header.Set("Content-Type", "application/json")
-		r := &JsonRequestBuilder{
+		r := &JSONRequestBuilder{
 			RequestMethod: http.MethodPost,
 			RequestHeader: header,
 			RequestURL:    url,
