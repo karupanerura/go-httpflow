@@ -1,5 +1,9 @@
 # httpflow
 
+[![Build Status](https://travis-ci.org/karupanerura/go-httpflow.svg?branch=master)](https://travis-ci.org/karupanerura/go-httpflow)
+[![codecov](https://codecov.io/gh/karupanerura/go-httpflow/branch/master/graph/badge.svg)](https://codecov.io/gh/karupanerura/go-httpflow)
+[![GoDoc](https://godoc.org/github.com/karupanerura/go-httpflow?status.svg)](http://godoc.org/github.com/karupanerura/go-httpflow)
+
 Simple web api client framework for go programming language.
 
 Example:
