@@ -156,6 +156,8 @@ type FormResponseHandler struct {
 	StringResponseHandler
 }
 
+var _ ResponseHandler = &FormResponseHandler{}
+
 func (h *FormResponseHandler) IsForm() bool {
 	contentType := strings.TrimSpace(h.Header.Get(contentTypeHeaderName))
 	parts := strings.SplitN(contentType, ";", 2)
