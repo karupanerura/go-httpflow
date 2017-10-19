@@ -96,7 +96,7 @@ func TestBinaryResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body := handler.GetBody()
+		body := handler.Bytes()
 		if diff := cmp.Diff(body, []byte{123, 45, 67, 89}); diff != "" {
 			t.Errorf("Should no diff, but got: %s", diff)
 		}

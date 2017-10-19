@@ -71,17 +71,20 @@ type BinaryResponseHandler struct {
 var _ ResponseHandler = &BinaryResponseHandler{}
 
 func (h *BinaryResponseHandler) HandleResponse(res *http.Response) (err error) {
-	defer res.Body.Close()
-	h.body, err = ioutil.ReadAll(res.Body)
+	rawBody := res.Body
+	defer rawBody.Close()
+
+	h.body, err = ioutil.ReadAll(rawBody)
 	if err != nil {
 		return
 	}
+	res.Body = ioutil.NopCloser(bytes.NewReader(h.body))
 
 	err = h.NobodyResponseHandler.HandleResponse(res)
 	return
 }
 
-func (h *BinaryResponseHandler) GetBody() []byte {
+func (h *BinaryResponseHandler) Bytes() []byte {
 	return h.body
 }
 
@@ -91,8 +94,8 @@ type StringResponseHandler struct {
 
 var _ ResponseHandler = &StringResponseHandler{}
 
-func (h *StringResponseHandler) GetBody() string {
-	body := h.BinaryResponseHandler.GetBody()
+func (h *StringResponseHandler) String() string {
+	body := h.Bytes()
 	return string(body)
 }
 
@@ -109,7 +112,7 @@ func (h *StringResponseHandler) GetEncoding() (encoding.Encoding, error) {
 }
 
 func (h *StringResponseHandler) GetDecodedString() (string, error) {
-	body := h.GetBody()
+	body := h.String()
 
 	encoding, err := h.GetEncoding()
 	if err != nil {
@@ -137,7 +140,7 @@ func (h *JSONResponseHandler) IsJSON() bool {
 }
 
 func (h *JSONResponseHandler) GetDecoder() *json.Decoder {
-	body := h.GetBody()
+	body := h.Bytes()
 	reader := bytes.NewReader(body)
 	return json.NewDecoder(reader)
 }
@@ -146,7 +149,7 @@ func (h *JSONResponseHandler) DecodeJSON(v interface{}) error {
 	if !h.IsJSON() {
 		return &UnexpectedContentTypeError{
 			ContentType: h.Header.Get(contentTypeHeaderName),
-			Body:        h.GetBody(),
+			Body:        h.Bytes(),
 		}
 	}
 	return h.GetDecoder().Decode(v)
@@ -169,12 +172,12 @@ func (h *FormResponseHandler) ParseForm() (url.Values, error) {
 	if !h.IsForm() {
 		return nil, &UnexpectedContentTypeError{
 			ContentType: h.Header.Get(contentTypeHeaderName),
-			Body:        h.BinaryResponseHandler.GetBody(),
+			Body:        h.Bytes(),
 		}
 	}
 
 	// Don't follow enconding
 	// SEE ALSO: https://www.w3.org/TR/html5/forms.html#application/x-www-form-urlencoded-encoding-algorithm
-	body := h.GetBody()
+	body := h.String()
 	return url.ParseQuery(body)
 }
