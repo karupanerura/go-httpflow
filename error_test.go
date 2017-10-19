@@ -8,3 +8,10 @@ func TestUnexpectedContentTypeError(t *testing.T) {
 		t.Errorf("Unexpected error message: %s", s)
 	}
 }
+
+func TestUnexpectedStatusCodeError(t *testing.T) {
+	err := &UnexpectedStatusCodeError{StatusCode: 500}
+	if s := err.Error(); s != "Unexpected StatusCode 500" {
+		t.Errorf("Unexpected error message: %s", s)
+	}
+}

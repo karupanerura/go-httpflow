@@ -30,16 +30,35 @@ func (h *RawResponseHandler) HandleResponse(res *http.Response) error {
 
 type NobodyResponseHandler struct {
 	RawResponseHandler
+	expectedStatusCodes []int
 	StatusCode
 	Header http.Header
 }
 
 var _ ResponseHandler = &NobodyResponseHandler{}
 
+func (h *NobodyResponseHandler) ExpectStatusCode(statusCodes ...int) {
+	h.expectedStatusCodes = append(h.expectedStatusCodes, statusCodes...)
+}
+
 func (h *NobodyResponseHandler) HandleResponse(res *http.Response) error {
 	h.StatusCode = StatusCode(res.StatusCode)
 	h.Header = res.Header
-	return h.RawResponseHandler.HandleResponse(res)
+	h.RawResponseHandler.HandleResponse(res) // always be nil
+
+	if h.expectedStatusCodes != nil {
+		ok := false
+		for _, statusCode := range h.expectedStatusCodes {
+			if res.StatusCode == statusCode {
+				ok = true
+				break
+			}
+		}
+		if !ok {
+			return &UnexpectedStatusCodeError{StatusCode: h.StatusCode}
+		}
+	}
+	return nil
 }
 
 type BinaryResponseHandler struct {

@@ -36,21 +36,55 @@ func TestRawResponseHandler(t *testing.T) {
 }
 
 func TestNobodyResponseHandler(t *testing.T) {
-	header := http.Header{}
-	header.Set("X-Waiwai", "wai-wai-")
-	res := &http.Response{StatusCode: 200, Header: header}
-	handler := &NobodyResponseHandler{}
-	err := handler.HandleResponse(res)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("Basic", func(t *testing.T) {
+		header := http.Header{}
+		header.Set("X-Waiwai", "wai-wai-")
+		res := &http.Response{StatusCode: 200, Header: header}
+		handler := &NobodyResponseHandler{}
+		err := handler.HandleResponse(res)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if handler.StatusCode != 200 {
-		t.Errorf("Should be 200, but got: %d", res.StatusCode)
-	}
-	if diff := cmp.Diff(handler.Header, header); diff != "" {
-		t.Errorf("Should no diff, but got: %s", diff)
-	}
+		if handler.StatusCode != 200 {
+			t.Errorf("Should be 200, but got: %d", res.StatusCode)
+		}
+		if diff := cmp.Diff(handler.Header, header); diff != "" {
+			t.Errorf("Should no diff, but got: %s", diff)
+		}
+	})
+
+	t.Run("ExpectStatusCode", func(t *testing.T) {
+		t.Run("Expected", func(t *testing.T) {
+			handler := &NobodyResponseHandler{}
+			handler.ExpectStatusCode(200, 201)
+			res := &http.Response{StatusCode: 200}
+			err := handler.HandleResponse(res)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if handler.StatusCode != 200 {
+				t.Errorf("Should be 200, but got: %d", res.StatusCode)
+			}
+		})
+
+		t.Run("Unexpected", func(t *testing.T) {
+			handler := &NobodyResponseHandler{}
+			handler.ExpectStatusCode(200, 201)
+			res := &http.Response{StatusCode: 500}
+			err := handler.HandleResponse(res)
+			if err == nil {
+				t.Fatal("Should not be nil")
+			}
+
+			if subErr, ok := err.(*UnexpectedStatusCodeError); !ok {
+				t.Error(err)
+			} else if subErr.StatusCode != 500 {
+				t.Errorf("Should get 500, but got: %d", subErr.StatusCode)
+			}
+		})
+	})
 }
 
 func TestBinaryResponseHandler(t *testing.T) {
