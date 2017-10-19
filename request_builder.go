@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type RequestBuilder interface {
@@ -49,6 +50,44 @@ func (r *NobodyRequestBuilder) BuildRequest() (*http.Request, error) {
 		RequestMethod: r.RequestMethod,
 		RequestHeader: r.RequestHeader,
 		RequestURL:    r.RequestURL,
+	}
+	return raw.BuildRequest()
+}
+
+type FormRequestBuilder struct {
+	RequestMethod string
+	RequestHeader http.Header
+	RequestURL    *url.URL
+	RequestBody   url.Values
+}
+
+var _ RequestBuilder = &FormRequestBuilder{}
+
+func (r *FormRequestBuilder) BuildRequest() (*http.Request, error) {
+	var header http.Header
+	if r.RequestHeader == nil {
+		header = http.Header{}
+		header.Set(contentTypeHeaderName, "application/x-www-form-urlencoded")
+	} else if r.RequestHeader.Get(contentTypeHeaderName) == "" {
+		header = http.Header{}
+		for name, value := range r.RequestHeader {
+			header[name] = value
+		}
+		header.Set(contentTypeHeaderName, "application/x-www-form-urlencoded")
+	} else {
+		header = r.RequestHeader
+	}
+
+	var reader io.Reader
+	if r.RequestBody != nil {
+		reader = strings.NewReader(r.RequestBody.Encode())
+	}
+
+	raw := &RawRequestBuilder{
+		RequestMethod: r.RequestMethod,
+		RequestHeader: header,
+		RequestURL:    r.RequestURL,
+		RequestBody:   reader,
 	}
 	return raw.BuildRequest()
 }
