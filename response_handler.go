@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
 )
 
@@ -89,26 +90,36 @@ type StringResponseHandler struct {
 
 var _ ResponseHandler = &StringResponseHandler{}
 
-func (h *StringResponseHandler) GetBody() (string, error) {
+func (h *StringResponseHandler) GetBody() string {
 	body := h.BinaryResponseHandler.GetBody()
+	return string(body)
+}
+
+func (h *StringResponseHandler) GetEncoding() (encoding.Encoding, error) {
 	_, params, err := mime.ParseMediaType(h.Header.Get(contentTypeHeaderName))
+	if err != nil {
+		return nil, err
+	}
+
+	if charset, ok := params["charset"]; ok {
+		return ianaindex.MIME.Encoding(charset)
+	}
+	return nil, nil
+}
+
+func (h *StringResponseHandler) GetDecodedString() (string, error) {
+	body := h.GetBody()
+
+	encoding, err := h.GetEncoding()
 	if err != nil {
 		return "", err
 	}
 
-	if charset, ok := params["charset"]; ok {
-		encoding, err := ianaindex.MIME.Encoding(charset)
-		if err != nil {
-			return "", err
-		}
-
-		body, err = encoding.NewDecoder().Bytes(body)
-		if err != nil {
-			return "", err
-		}
+	if encoding != nil {
+		return encoding.NewDecoder().String(body)
 	}
 
-	return string(body), nil
+	return body, nil
 }
 
 type JSONResponseHandler struct {

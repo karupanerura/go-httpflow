@@ -137,7 +137,7 @@ func TestStringResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body, err := handler.GetBody()
+		body, err := handler.GetDecodedString()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +157,7 @@ func TestStringResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body, err := handler.GetBody()
+		body, err := handler.GetDecodedString()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -177,7 +177,7 @@ func TestStringResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body, err := handler.GetBody()
+		body, err := handler.GetDecodedString()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -197,7 +197,7 @@ func TestStringResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body, err := handler.GetBody()
+		body, err := handler.GetDecodedString()
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -217,7 +217,7 @@ func TestStringResponseHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		body, err := handler.GetBody()
+		body, err := handler.GetDecodedString()
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
