@@ -2,6 +2,7 @@ package httpflow
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -76,7 +77,7 @@ func TestNewAgent(t *testing.T) {
 	}
 }
 
-func TestAgentDo(t *testing.T) {
+func TestAgentRunSessionCtx(t *testing.T) {
 	t.Run("No Error", func(t *testing.T) {
 		agent := Agent{Client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
 		req, err := http.NewRequest(http.MethodGet, "http://example.com/", nil)
@@ -85,7 +86,7 @@ func TestAgentDo(t *testing.T) {
 		}
 
 		session := &mockSession{request: req}
-		err = agent.RunSession(session)
+		err = agent.RunSessionCtx(context.Background(), session)
 		if err != nil {
 			t.Error(err)
 		}
@@ -121,7 +122,7 @@ func TestAgentDo(t *testing.T) {
 
 		const msg = "MOCK REQUEST BUILDING ERROR DAYO"
 		session := &mockSession{reqerr: errors.New(msg)}
-		err := agent.RunSession(session)
+		err := agent.RunSessionCtx(context.Background(), session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -147,7 +148,7 @@ func TestAgentDo(t *testing.T) {
 		}
 
 		session := &mockSession{request: req}
-		err = agent.RunSession(session)
+		err = agent.RunSessionCtx(context.Background(), session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}
@@ -172,7 +173,7 @@ func TestAgentDo(t *testing.T) {
 
 		const msg = "MOCK RESPONSE ERROR DAYO"
 		session := &mockSession{request: req, reserr: errors.New(msg)}
-		err = agent.RunSession(session)
+		err = agent.RunSessionCtx(context.Background(), session)
 		if err == nil {
 			t.Fatal("Should not be nil")
 		}

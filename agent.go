@@ -24,21 +24,34 @@ type Session interface {
 	ResponseHandler
 }
 
-func (a *Agent) RunSession(session Session) error {
-	return a.RunSessionCtx(context.Background(), session)
+type contextSession struct {
+	Session
+	ctx context.Context
 }
 
-func (a *Agent) RunSessionCtx(ctx context.Context, session Session) error {
+func (s *contextSession) BuildRequest() (*http.Request, error) {
+	req, err := s.Session.BuildRequest()
+	if err != nil {
+		return nil, err
+	}
+
+	return req.WithContext(s.ctx), nil
+}
+
+func (a *Agent) RunSession(session Session) error {
 	req, err := session.BuildRequest()
 	if err != nil {
 		return err
 	}
 
-	req = req.WithContext(ctx)
 	res, err := a.Client.Do(req)
 	if err != nil {
 		return err
 	}
 
 	return session.HandleResponse(res)
+}
+
+func (a *Agent) RunSessionCtx(ctx context.Context, session Session) error {
+	return a.RunSession(&contextSession{ctx: ctx, Session: session})
 }
