@@ -14,4 +14,9 @@ func TestUnexpectedStatusCodeError(t *testing.T) {
 	if s := err.Error(); s != "Unexpected StatusCode 500" {
 		t.Errorf("Unexpected error message: %s", s)
 	}
+
+	err = &UnexpectedStatusCodeError{StatusCode: 500, Body: []byte("foo")}
+	if s := err.Error(); s != "Unexpected StatusCode 500, Body = foo" {
+		t.Errorf("Unexpected error message: %s", s)
+	}
 }

@@ -81,6 +81,9 @@ func (h *BinaryResponseHandler) HandleResponse(res *http.Response) (err error) {
 	res.Body = ioutil.NopCloser(bytes.NewReader(h.body))
 
 	err = h.NobodyResponseHandler.HandleResponse(res)
+	if uerr, ok := err.(*UnexpectedStatusCodeError); ok {
+		uerr.Body = h.body
+	}
 	return
 }
 
