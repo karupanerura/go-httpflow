@@ -58,7 +58,7 @@ type mockSession struct {
 	handleres int
 }
 
-func (m *mockSession) BuildRequest() (*http.Request, error) {
+func (m *mockSession) BuildRequest(context.Context) (*http.Request, error) {
 	m.buildreq++
 	return m.request, m.reqerr
 }
