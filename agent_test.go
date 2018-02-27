@@ -77,6 +77,45 @@ func TestNewAgent(t *testing.T) {
 	}
 }
 
+func TestAgentRunSession(t *testing.T) {
+	agent := Agent{Client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
+	req, err := http.NewRequest(http.MethodGet, "http://example.com/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	session := &mockSession{request: req}
+	err = agent.RunSession(session)
+	if err != nil {
+		t.Error(err)
+	}
+	if session.reserr != nil {
+		t.Error(err)
+	}
+
+	if session.buildreq != 1 {
+		t.Errorf("Should called once, but called %d times", session.buildreq)
+	}
+	if session.handleres != 1 {
+		t.Errorf("Should called once, but called %d times", session.handleres)
+	}
+
+	res := session.response
+	if res == nil {
+		t.Fatal("Response should not be nil")
+	}
+
+	if res.StatusCode != 200 {
+		t.Errorf("Should be 200, but got: %d", res.StatusCode)
+	}
+	if s := res.Header.Get("Content-Type"); s != "text/plain" {
+		t.Errorf("Should be text/plain, but got: %s", s)
+	}
+	if body, err := ioutil.ReadAll(res.Body); string(body) != "this is example.com" || err != nil {
+		t.Errorf("Should be this is example.com, but got: %s, err: %v", string(body), err)
+	}
+}
+
 func TestAgentRunSessionCtx(t *testing.T) {
 	t.Run("No Error", func(t *testing.T) {
 		agent := Agent{Client: mockClient{mockResponse: mockResponse{200, map[string]string{"Content-Type": "text/plain"}, []byte("this is example.com")}}}
