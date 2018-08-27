@@ -158,6 +158,15 @@ func (h *JSONResponseHandler) DecodeJSON(v interface{}) error {
 	return h.GetDecoder().Decode(v)
 }
 
+func (h *JSONResponseHandler) ParseJSONAsInterface() (interface{}, error) {
+	var v interface{}
+	if err := h.DecodeJSON(&v); err != nil {
+		return nil, err
+	}
+
+	return v, nil
+}
+
 type FormResponseHandler struct {
 	StringResponseHandler
 }
