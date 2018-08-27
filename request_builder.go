@@ -2,6 +2,7 @@ package httpflow
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 )
 
 type RequestBuilder interface {
-	BuildRequest() (*http.Request, error)
+	BuildRequest(context.Context) (*http.Request, error)
 }
 
 type RawRequestBuilder struct {
@@ -23,11 +24,12 @@ type RawRequestBuilder struct {
 
 var _ RequestBuilder = &RawRequestBuilder{}
 
-func (r *RawRequestBuilder) BuildRequest() (*http.Request, error) {
+func (r *RawRequestBuilder) BuildRequest(ctx context.Context) (*http.Request, error) {
 	req, err := http.NewRequest(r.RequestMethod, r.RequestURL.String(), r.RequestBody)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	if r.RequestHeader != nil {
 		for name := range r.RequestHeader {
@@ -52,13 +54,13 @@ type NobodyRequestBuilder struct {
 
 var _ RequestBuilder = &NobodyRequestBuilder{}
 
-func (r *NobodyRequestBuilder) BuildRequest() (*http.Request, error) {
+func (r *NobodyRequestBuilder) BuildRequest(ctx context.Context) (*http.Request, error) {
 	raw := &RawRequestBuilder{
 		RequestMethod: r.RequestMethod,
 		RequestHeader: r.RequestHeader,
 		RequestURL:    r.RequestURL,
 	}
-	return raw.BuildRequest()
+	return raw.BuildRequest(ctx)
 }
 
 type FormRequestBuilder struct {
@@ -70,7 +72,7 @@ type FormRequestBuilder struct {
 
 var _ RequestBuilder = &FormRequestBuilder{}
 
-func (r *FormRequestBuilder) BuildRequest() (*http.Request, error) {
+func (r *FormRequestBuilder) BuildRequest(ctx context.Context) (*http.Request, error) {
 	var reader io.Reader
 	if r.RequestBody != nil {
 		reader = strings.NewReader(r.RequestBody.Encode())
@@ -83,7 +85,7 @@ func (r *FormRequestBuilder) BuildRequest() (*http.Request, error) {
 		RequestBody:        reader,
 		DefaultContentType: "application/x-www-form-urlencoded",
 	}
-	return raw.BuildRequest()
+	return raw.BuildRequest(ctx)
 }
 
 type JSONRequestBuilder struct {
@@ -95,7 +97,7 @@ type JSONRequestBuilder struct {
 
 var _ RequestBuilder = &JSONRequestBuilder{}
 
-func (r *JSONRequestBuilder) BuildRequest() (*http.Request, error) {
+func (r *JSONRequestBuilder) BuildRequest(ctx context.Context) (*http.Request, error) {
 	var reader io.Reader
 	if r.RequestBody != nil {
 		body, err := json.Marshal(r.RequestBody)
@@ -112,5 +114,5 @@ func (r *JSONRequestBuilder) BuildRequest() (*http.Request, error) {
 		RequestBody:        reader,
 		DefaultContentType: "application/json",
 	}
-	return raw.BuildRequest()
+	return raw.BuildRequest(ctx)
 }

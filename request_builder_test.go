@@ -1,6 +1,7 @@
 package httpflow
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -24,7 +25,7 @@ func TestRawRequestBuilder(t *testing.T) {
 			RequestURL:    url,
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -47,7 +48,7 @@ func TestRawRequestBuilder(t *testing.T) {
 				RequestBody:   strings.NewReader("foo"),
 			}
 
-			req, err := r.BuildRequest()
+			req, err := r.BuildRequest(context.Background())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -73,7 +74,7 @@ func TestRawRequestBuilder(t *testing.T) {
 				DefaultContentType: "text/plain",
 			}
 
-			req, err := r.BuildRequest()
+			req, err := r.BuildRequest(context.Background())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -102,7 +103,7 @@ func TestRawRequestBuilder(t *testing.T) {
 				DefaultContentType: "text/html",
 			}
 
-			req, err := r.BuildRequest()
+			req, err := r.BuildRequest(context.Background())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -127,7 +128,7 @@ func TestRawRequestBuilder(t *testing.T) {
 			RequestURL:    url,
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if req != nil {
 			t.Errorf("Should be nil, but got: %v", req)
 		}
@@ -144,7 +145,7 @@ func TestNobodyRequestBuilder(t *testing.T) {
 		RequestURL:    url,
 	}
 
-	req, err := r.BuildRequest()
+	req, err := r.BuildRequest(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +165,7 @@ func TestFormRequestBuilder(t *testing.T) {
 			RequestURL:    reqURL,
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -183,7 +184,7 @@ func TestFormRequestBuilder(t *testing.T) {
 			RequestBody:   url.Values{"foo": {"bar"}},
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -210,7 +211,7 @@ func TestJSONRequestBuilder(t *testing.T) {
 			RequestURL:    url,
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -229,7 +230,7 @@ func TestJSONRequestBuilder(t *testing.T) {
 			RequestBody:   map[string]string{"foo": "bar"},
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -257,7 +258,7 @@ func TestJSONRequestBuilder(t *testing.T) {
 			RequestBody:   map[struct{}]struct{}{}, // invalid
 		}
 
-		req, err := r.BuildRequest()
+		req, err := r.BuildRequest(context.Background())
 		if req != nil {
 			t.Errorf("Should be nil, but got: %v", req)
 		}
